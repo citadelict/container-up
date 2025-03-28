@@ -304,12 +304,37 @@ func setupCgroups(pid int) {
 		panic(err)
 	}
 
-	if err := os.WriteFile(filepath.Join(cgroups, "cgroup.subtree_control"), []byte("+cpu +pids"), 0700); err != nil {
-		log.Printf("Failed to enable cpu and pids controllers: %v", err)
+	// Enable cpu, pids, memory, and io controllers
+	if err := os.WriteFile(filepath.Join(cgroups, "cgroup.subtree_control"), []byte("+cpu +pids +memory +io"), 0700); err != nil {
+		log.Printf("Failed to enable cpu, pids, memory, and io controllers: %v", err)
+		panic(err)
 	}
 
+	// Set PID limit (max processes)
 	must(os.WriteFile(filepath.Join(containerDir, "pids.max"), []byte("20"), 0700))
+	
+	// Set CPU limit (50% of one CPU core: 50000 microseconds out of 100000)
 	must(os.WriteFile(filepath.Join(containerDir, "cpu.max"), []byte("50000 100000"), 0700))
+	
+	// Set memory limit (64MB = 64 * 1024 * 1024 bytes)
+	must(os.WriteFile(filepath.Join(containerDir, "memory.max"), []byte("67108864"), 0700))
+	
+	// Log current io.stat for debugging
+	if stat, err := os.ReadFile(filepath.Join(containerDir, "io.stat")); err == nil {
+		log.Printf("Current io.stat: %s", string(stat))
+	} else {
+		log.Printf("Failed to read io.stat: %v", err)
+	}
+
+	// Set I/O limit for NVMe device (10MB/s read, 10MB/s write)
+	// Using 259:0 for /dev/nvme0n1 (whole disk, as seen in io.stat)
+	if err := os.WriteFile(filepath.Join(containerDir, "io.max"), []byte("259:0 rbps=10485760 wbps=10485760"), 0700); err != nil {
+		log.Printf("Failed to set io.max for 259:0 (nvme0n1): %v. Check kernel support for NVMe I/O throttling.", err)
+	} else {
+		log.Println("Successfully set I/O limits to 10MB/s read/write for device 259:0")
+	}
+	
+	// Assign the process to this cgroup
 	must(os.WriteFile(filepath.Join(containerDir, "cgroup.procs"), []byte(strconv.Itoa(pid)), 0700))
 }
 
