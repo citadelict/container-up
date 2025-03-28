@@ -382,6 +382,26 @@ done
 
 ---
 
-## 9. Conclusion
+## 9. Screenshots
 
-This implementation successfully delivers a containerized Nginx web server with CPU limits, network isolation, and external accessibility. Starting from a minimal Alpine base, it evolved through troubleshooting networking, resource limits, and application persistence, resulting in a functional solution akin to a simplified Docker container.
+![Container](./images/1.png)
+*Figure 1: High-level architecture of the container and its file system*
+
+![container](./images/2.png)
+*Figure 2: HTML webpage *
+
+![container](./images/3.png)
+*Figure 3: Web-server process within the container*
+
+![container](./images/4.png)
+*Figure 4: mapped port within the container*
+
+![container](./images/5.png)
+*Figure 5: nginx live logs within the container*
+
+![container](./images/6.png)
+*Figure 6: nginx status within host machine (shows that our containers are isolated from the host environment)*
+
+## 10. Conclusion
+
+This implementation successfully delivers a containerized environment that is completely isolated from the host environment with CPU limits, network isolation, and external accessibility. Starting from a minimal Alpine base, it evolved through troubleshooting networking, resource limits, and application persistence, resulting in a functional solution akin to a simplified Docker container. We also deployed a webserver using nginx and a webpage written in html to test. 
